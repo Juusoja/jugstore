@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<title>Jurigin Login</title>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+<style>
+  body, form, h1,h2,h3,h4,h5,h6 {font-family: "Montserrat", sans-serif}
+</style>
+
+<body class="w3-black">
+
+  <header class="w3-container w3-padding-32 w3-center">
+    <h1 class="w3-jumbo w3-text-red"><b>Jurigin</b></h1>
+  </header>
+
+  <h3 class="w3-center"><b>state of the art in gaming platforms</b></h3>
+
+    <form class="w3-center w3-padding-32" method="post">
+      {% csrf_token %}
+      <b>
+        {{ form.as_p }}
+      </b>
+      <button class="w3-button w3-red" type="submit">Login</button>
+    </form>
+
+    <p class="w3-large w3-center"><a href="{% url 'signup' %}" class="w3-hover-text-red">Don't have an account yet?
+        Signup here</a></p>
+</body>

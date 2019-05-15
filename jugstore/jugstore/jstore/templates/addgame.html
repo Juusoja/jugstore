@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<title>Jurigin - Add game</title>
+<meta charset="UTF-8">
+
+<style>
+  body, form, h1,h2,h3,h4,h5,h6 {font-family: "Montserrat", sans-serif}
+        </style>
+
+<body class="w3-black">
+
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+
+
+  <h2 class="w3-center"><b>Add a new game</b></h2>
+  <div class="w3-content w3-center">
+
+    <form id="upload_form" class="form" action="/addgame" method="post">
+      {% csrf_token %}
+      Name:<br>
+      <input type="text" name="name" placeholder="The name of your game">
+      <br><br>
+      Description:<br>
+      <input type="text" name="description" placeholder="The description of your game">
+      <br><br>
+      URL:<br>
+      <input type="text" name="url" placeholder="The URL to your game">
+      <br><br>
+      Price:<br>
+      <input type="float" name="price">
+      <br><br>
+
+
+      Category:<br>
+      <input type="radio" name="category" value="rpg" checked> Role playing<br>
+      <input type="radio" name="category" value="rac"> Racing <br>
+      <input type="radio" name="category" value="act"> Action <br>
+      <input type="radio" name="category" value="str"> Strategy <br>
+      <input type="radio" name="category" value="sho"> Shooter <br>
+      <input type="radio" name="category" value="sur"> Survival <br>
+      <input type="radio" name="category" value="hor"> Horror <br>
+      <input type="radio" name="category" value="oth"> Other <br>
+      <br>
+
+      <input class="w3-button w3-red" type="submit" value="Submit">
+    </form>
+
+    <p><b>Click submit to add your game</b></p>
+
+
+  </div>
+</body>
+
+</html>

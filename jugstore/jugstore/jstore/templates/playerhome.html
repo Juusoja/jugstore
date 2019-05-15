@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<title>Jurigin</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://www.w3schools.com/lib/w3-colors-flat.css">
+
+<style>
+  body, h1,h2,h3,h4,h5,h6 {font-family: "Montserrat", sans-serif}
+.w3-row-padding img {margin-bottom: 12px}
+/* Set the width of the sidebar to 120px */
+.w3-sidebar {width: 120px;background: #222;}
+/* Add a left margin to the "page content" that matches the width of the sidebar (120px) */
+#main {margin-left: 120px}
+/* Remove margins from "page content" on small screens */
+@media only screen and (max-width: 600px) {#main {margin-left: 0}}
+</style>
+
+<body class="w3-black">
+  {% load extratags %}
+
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript">
+    function displayIframe(gurl, gname, gid, gsave) {
+      document.getElementById("iframeDisplay").innerHTML = "<iframe id=\"gamewindow\" src=" + gurl + " height=\"640\" class=\"w3-animate-zoom\" width=\"800\" style=\"background:#ffffff\" ></iframe>";
+      document.getElementById("gameWindowTxt").innerHTML = "<b> Playing:  </b>" + gname;
+      window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+
+      // Listen for messages from iframe
+      window.addEventListener("message", function (evt) {
+        msg = evt.data;
+
+        switch (msg["messageType"]) {
+
+          case "SETTING":
+            // Settings (Game Resolution)
+            console.log("Settings eventti");
+            console.log("Data:", msg);
+            var options = evt.data.options;
+            options.visibility = 'visible';
+            $("#gamewindow").css(options);
+            break;
+
+          case "SCORE":
+            console.log("Scores eventti");
+            console.log("Data:", msg);
+            // Send scores
+            sendscores(msg);
+            alert('Scores sent, reloading page');
+            location.reload();
+            break;
+
+          case "SAVE":
+            console.log("Save eventti");
+            console.log("Data:", msg);
+            // Gamestate saving
+            save(msg);
+            alert('Game saved, reloading page');
+            location.reload();
+            break;
+          case "LOAD_REQUEST":
+            console.log("Load request eventti");
+            // Gamestate loading
+            load(gsave);
+            break;
+
+          default:
+            alert("Message type not supported by Jurigin");
+        }
+
+      });
+
+      // Include CRF in ajax (https://stackoverflow.com/questions/35112451/forbidden-csrf-token-missing-or-incorrect-django-error)
+      function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+          var cookies = document.cookie.split(';');
+          for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+      var csrftoken = getCookie('csrftoken');
+      function csrfSafeMethod(method) {
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+      }
+      $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+          if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+          }
+        }
+      });
+
+      // ---------------------------------------------------------------------------------------------------------------------------------
+
+
+      function sendscores(msg) {
+        // Send game scores with AJAX
+        var data = {
+          messageType: msg.messageType,
+          score: msg.score,
+          gid: gid
+        }
+        $.ajax({
+          "type": "POST",
+          "url": "{% url 'savegame' %}",
+          "data": data,
+          "success": function (result) {
+            console.log("gamescores sent")
+          }
+        });
+
+
+      }
+
+      function save(msg) {
+        // Send gamestate with AJAX
+        var data = {
+          messageType: msg.messageType,
+          gamestate: JSON.stringify(msg.gameState),
+          gid: gid
+        }
+        $.ajax({
+          "type": "POST",
+          "url": "{% url 'savegame' %}",
+          "data": data,
+          "success": function (result) {
+            console.log("gamesave sent")
+          }
+        });
+      }
+
+      function load(gamestate) {
+        // Load gamestate
+        parsedGameState = JSON.parse(gamestate);
+        console.log(parsedGameState);
+
+        var message = {
+          messageType: "LOAD",
+          gameState: {
+            playerItems: parsedGameState.playerItems,
+            score: parsedGameState.score
+          }
+        };
+        var iframeWindow = document.getElementById('gamewindow').contentWindow.postMessage(message, "*");
+      }
+
+    }
+
+
+  </script>
+
+
+  <!-- Tab navigation -->
+  <div class="w3-top">
+    <div class="w3-row w3-card w3-black w3-text-grey">
+      <div class="w3-right w3-large">
+        <a href="{% url 'home'%}" class="w3-bar-item w3-button w3-hover-red"><b>HOME</b></a>
+        <a href="{% url 'gamestore' %}" class="w3-bar-item w3-button w3-hover-red"><b>GAMESTORE</b></a>
+        <a href="{% url 'leaderboards' %}" class="w3-bar-item w3-button w3-hover-red"><b>LEADERBOARDS</b></a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Page Content -->
+  <div class="w3-padding-large" id="main">
+    <!-- Header/Home -->
+    <header class="w3-container w3-padding-32 w3-center " id="home">
+      <br>
+      <h1 class="w3-jumbo w3-text-red"><b>Jurigin</b></h1>
+    </header>
+
+    <!-- About Section -->
+    <div class="w3-content w3-justify w3-text-grey w3-padding-64" id="profile">
+      <h2 class="w3-text-grey"><b> {{ user.username }} </b> - player</h2>
+      <hr style="width:200px" class="w3-opacity">
+      <p><b>Owned games:</b> {{user.games.count}} <br> </p>
+      <a href="{% url 'logout' %}" class="w3-button w3-blue-gray w3-text-black w3-hover-white">Logout</a>
+      <!-- End About Section -->
+    </div>
+
+    <!-- Games Section -->
+    <div class="w3-content w3-justify w3-text-grey w3-padding-64">
+      <h2 class="w3-text-grey"><b>My Games</b></h2>
+      <hr style="width:200px" class="w3-opacity">
+      <div class="w3-row">
+        {% for game in user.games.all %}
+        <div class="w3-col m3 l4 w3-padding-16">
+          <div class="w3-card-2 w3-center w3-blue-grey w3-text-dark-grey" style="width:300px">
+            <br>
+            <h2 class="w3-text-black"><b>{{game.name}}</b></h2>
+            <p><b> Genre: </b> {{game.category}}</p>
+            <p><b>Developer: </b>{{game.developer.username}}</p>
+            <p>Your highscore: {% getUserHighScore user game %} </p>
+            <button class="w3-button w3-red w3-hover-white w3-text-black" onclick="displayIframe('{{game.gameurl}}', '{{game.name}}', '{{game.gameid}}', '{% getGameState user game %}')">Play</button>
+            <br><br>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <br>
+      <a href="gamestore" class="w3-button w3-red w3-text-black w3-hover-white">Buy more games</a>
+
+
+    </div>
+    <!-- End Games Section -->
+
+  </div>
+
+  <div class="w3-content w3-justify w3-text-grey w3-padding-64" id="games">
+
+    <h2 class="w3-text-grey w3-center" id="gameWindowTxt"></h2>
+    <div id="iframeDisplay" class="w3-center"></div>
+
+  </div>
+
+
+  <!-- Footer -->
+  <footer class="w3-center w3-content w3-padding-64 w3-text-grey">
+    <p class="w3-medium">Gitlab: <a href="https://version.aalto.fi/gitlab/laakkoj2/wsd2018-project" target="_blank"
+        class="w3-hover-text-red">https://version.aalto.fi/gitlab/laakkoj2/wsd2018-project</a></p>
+    <!-- End footer -->
+  </footer>
+
+
+</body>
+
+</html>
